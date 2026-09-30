@@ -1,24 +1,27 @@
-# Televisão.TV → M3U para SS IPTV
+# Televisão.TV M3U v3
 
-Projeto para gerar automaticamente uma lista M3U a partir do catálogo público do Televisão.TV.
+Gerador automático de playlist M3U para SS IPTV a partir do catálogo público do Televisão.TV.
 
-## Recursos
+## Principais melhorias desta versão
 
-- Atualização automática pelo GitHub Actions.
-- Execução a cada 6 horas.
-- Execução manual em Actions → Atualizar lista M3U → Run workflow.
-- Categorias conforme o catálogo da fonte.
-- `tvg-name`.
-- `tvg-logo`.
-- `group-title`.
-- Detecção de novos canais.
-- Remoção de canais que não possuem stream ativo.
-- Validação dos streams.
-- Fallback para Chromium/Playwright quando o site bloqueia clientes HTTP ou depende de JavaScript.
-- Preservação da última M3U válida quando a fonte está temporariamente indisponível.
-- `status.json` com relatório da execução.
+A versão 3 não depende de uma lista fixa de slugs de canais.
 
-## Arquivos
+Ela:
+
+1. abre a página inicial;
+2. identifica as categorias pela navegação do próprio site;
+3. abre cada categoria;
+4. coleta todos os links internos;
+5. usa heurísticas para identificar páginas individuais de canais;
+6. abre as páginas dos canais;
+7. procura `.m3u8`, `.mpd`, `.m3u` e players/iframes;
+8. resolve players quando necessário;
+9. testa o stream;
+10. gera a M3U.
+
+Também gera um `status.json` detalhado.
+
+## Estrutura
 
 ```text
 .
@@ -34,34 +37,47 @@ Projeto para gerar automaticamente uma lista M3U a partir do catálogo público 
         └── atualizar.yml
 ```
 
-## GitHub
+## Execução no GitHub
 
-Coloque todos os arquivos na raiz do repositório.
+O workflow executa automaticamente a cada 6 horas.
 
-Depois:
+Também pode ser executado manualmente:
 
-1. Abra `Actions`.
-2. Abra `Atualizar lista M3U`.
-3. Execute `Run workflow`.
+`Actions` → `Atualizar lista M3U` → `Run workflow`.
 
-A lista publicada pelo GitHub fica em:
+## URL para SS IPTV
+
+Depois de publicar:
 
 ```text
 https://raw.githubusercontent.com/USUARIO/REPOSITORIO/main/canais.m3u
 ```
 
-## SS IPTV
+## Diagnóstico
 
-Use a URL `raw.githubusercontent.com` acima como fonte remota da playlist.
+O `status.json` mostra:
 
-## Erro HTTP 403
+- quantidade de categorias;
+- páginas de categorias acessadas;
+- páginas de canais descobertas;
+- páginas de canais únicas;
+- streams encontrados;
+- streams ativos;
+- streams inativos;
+- nome do canal;
+- categoria;
+- página original;
+- URL do stream;
+- URL do logo.
 
-O coletor tenta primeiro HTTP com cabeçalhos de navegador. Se o servidor responder 403, 429 ou erro semelhante, ele tenta Chromium/Playwright.
+## Proteção contra falhas
 
-Se a fonte continuar indisponível, o programa não apaga uma `canais.m3u` anterior válida.
+Se o Televisão.TV retornar 403 ou exigir JavaScript, o projeto tenta Chromium.
 
-Isso evita que uma falha temporária da origem resulte em uma playlist vazia.
+Se a fonte estiver temporariamente indisponível e já existir uma `canais.m3u` válida, ela é preservada.
+
+A playlist não é substituída por uma lista vazia apenas porque uma execução falhou.
 
 ## Observação
 
-A disponibilidade dos streams depende das fontes de transmissão. O projeto apenas coleta os endereços que são disponibilizados pelas páginas e valida a resposta HTTP.
+A disponibilidade e os direitos de transmissão dos streams pertencem às respectivas fontes. O projeto apenas processa os endereços que a fonte disponibiliza publicamente.
