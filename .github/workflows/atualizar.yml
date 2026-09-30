@@ -1,0 +1,52 @@
+name: Atualizar lista M3U
+
+on:
+  schedule:
+    # GitHub Actions usa UTC. Executa a cada 6 horas.
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-m3u
+  cancel-in-progress: true
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Gerar M3U
+        run: python gerar_m3u.py
+
+      - name: Validar arquivo M3U
+        run: |
+          test -s canais.m3u
+          grep -q '^#EXTM3U' canais.m3u
+          echo "Entradas EXTINF: $(grep -c '^#EXTINF:' canais.m3u || true)"
+
+      - name: Commit das alterações
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add canais.m3u status.json
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração."
+          else
+            git commit -m "Atualizar lista M3U ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+            git push
+          fi
