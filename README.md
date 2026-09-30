@@ -1,15 +1,7 @@
-# Televisão.TV M3U v4
+# Televisão.TV → M3U para SS IPTV
 
-Corrige a descoberta de canais usando a estrutura atual do Televisão.TV.
+A descoberta de canais usa Chromium/Playwright diretamente no DOM renderizado e lê `a.href`. O formato esperado das páginas de canal é `https://televisao.tv/slug`.
 
-A v4 usa as 14 categorias principais do menu e extrai links de `href`,
-`data-href`, `data-url`, `data-link`, `data-channel-url` e outros atributos.
-Também possui fallback por regex.
+O workflow atualiza a lista a cada 6 horas e permite execução manual. Se a descoberta retornar zero, `canais.m3u` não é substituída por uma lista vazia.
 
-Depois abre cada página de canal, procura m3u8/mpd/m3u e iframes, valida o
-stream e gera `canais.m3u` com `tvg-name`, `tvg-logo` e `group-title`.
-
-O workflow roda a cada 6 horas e pode ser executado manualmente em Actions.
-
-URL da playlist:
-`https://raw.githubusercontent.com/USUARIO/REPOSITORIO/main/canais.m3u`
+O log mostra a quantidade de links e exemplos por categoria, facilitando diagnosticar qualquer alteração futura do site.
