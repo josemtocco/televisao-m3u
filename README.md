@@ -1,7 +1,13 @@
 # Televisão.TV → M3U para SS IPTV
 
-A descoberta de canais usa Chromium/Playwright diretamente no DOM renderizado e lê `a.href`. O formato esperado das páginas de canal é `https://televisao.tv/slug`.
+Versão 6.
 
-O workflow atualiza a lista a cada 6 horas e permite execução manual. Se a descoberta retornar zero, `canais.m3u` não é substituída por uma lista vazia.
-
-O log mostra a quantidade de links e exemplos por categoria, facilitando diagnosticar qualquer alteração futura do site.
+Correções principais:
+- usa somente `a:visible` para não confundir o catálogo global de aproximadamente 370 canais com a categoria atual;
+- coleta as categorias separadamente;
+- não espera `networkidle` nas páginas de canais;
+- não faz GET/HEAD de 15 segundos para validar cada stream;
+- captura URLs `.m3u8`, `.mpd` e `.m3u` do HTML, scripts, respostas de rede e players/iframes;
+- processa até 20 páginas simultaneamente;
+- grava `status.json` detalhado;
+- atualiza a M3U somente quando encontra streams.
