@@ -1,31 +1,31 @@
 name: Atualizar lista M3U
-
 on:
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
-
 permissions:
   contents: write
-
+concurrency:
+  group: atualizar-m3u
+  cancel-in-progress: true
 jobs:
   atualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - run: |
+      - name: Instalar dependências
+        run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
       - name: Gerar M3U
-        env:
-          USE_BROWSER: auto
-          HTTP_TIMEOUT: "30"
-          HTTP_RETRIES: "3"
         run: python gerar_m3u.py
       - name: Diagnóstico
         if: always()
@@ -33,10 +33,12 @@ jobs:
           echo "===== STATUS ====="
           cat status.json || true
           echo "===== EXTINF ====="
-          grep -c '^#EXTINF:' canais.m3u || true
-      - name: Publicar
+          test -f canais.m3u && grep -c '^#EXTINF:' canais.m3u || true
+      - name: Commit e push
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add canais.m3u status.json
-          if git diff --cached --quiet; then echo "Nenhuma alteração."; else git commit -m "Atualiza lista M3U"; git push; fi
+          git diff --cached --quiet || git commit -m "Atualizar lista M3U"
+          git push
