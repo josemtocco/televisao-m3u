@@ -2,9 +2,6 @@ name: Atualizar lista M3U
 
 on:
   schedule:
-    # GitHub Actions usa UTC.
-    # 00, 06, 12 e 18 UTC = 21, 03, 09 e 15 no horário de Brasília
-    # durante UTC-3. O horário exato pode variar conforme o fuso/horário legal.
     - cron: "17 */6 * * *"
   workflow_dispatch:
 
@@ -16,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Baixar repositório
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
@@ -36,20 +33,20 @@ jobs:
       - name: Gerar M3U
         env:
           USE_BROWSER: auto
-          HTTP_TIMEOUT: "25"
+          HTTP_TIMEOUT: "30"
           HTTP_RETRIES: "3"
-          WORKERS: "8"
         run: |
           python gerar_m3u.py
 
-      - name: Mostrar resultado
+      - name: Mostrar diagnóstico
+        if: always()
         run: |
-          echo "---- canais.m3u ----"
+          echo "===== STATUS ====="
+          cat status.json || true
+          echo "===== M3U ====="
           grep -c '^#EXTINF:' canais.m3u || true
-          echo "---- status ----"
-          cat status.json
 
-      - name: Commit e push
+      - name: Commit alterações
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
