@@ -1,9 +1,4 @@
 {
-  "source": "https://televisao.tv/",
-  "generated_at": null,
-  "catalog_channels": 0,
-  "active_channels": 0,
-  "inactive_channels": 0,
-  "categories": 0,
-  "channels": []
+  "success": false,
+  "message": "Aguardando primeira execu\u00e7\u00e3o."
 }
