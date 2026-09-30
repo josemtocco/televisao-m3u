@@ -1,13 +1,17 @@
 name: Atualizar lista M3U
+
 on:
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
+
 permissions:
   contents: write
+
 concurrency:
   group: atualizar-m3u
   cancel-in-progress: true
+
 jobs:
   atualizar:
     runs-on: ubuntu-latest
@@ -16,24 +20,35 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
+
       - name: Instalar dependências
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
+
       - name: Gerar M3U
         run: python gerar_m3u.py
+
       - name: Diagnóstico
         if: always()
         run: |
-          echo "===== STATUS ====="
-          cat status.json || true
-          echo "===== EXTINF ====="
+          echo "===== MÉTRICAS ====="
+          python - <<'PY'
+          import json
+          s=json.load(open("status.json",encoding="utf-8"))
+          print(json.dumps(s.get("metrics",{}),ensure_ascii=False,indent=2))
+          for c in s.get("categories",[]):
+              print(f'{c["name"]}: {c.get("links",0)}')
+          PY
+          echo "===== M3U ====="
           test -f canais.m3u && grep -c '^#EXTINF:' canais.m3u || true
+
       - name: Commit e push
         if: success()
         run: |
